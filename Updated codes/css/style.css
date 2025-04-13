@@ -1,0 +1,158 @@
+:root {
+    --hfc-blue: #052460;
+    --hfc-yellow: #FFCF01;
+    --hfc-blue-light: #1a3a7a;
+    --hfc-yellow-dark: #e6b900;
+    --hfc-purple: #6f42c1;
+    --hfc-aqua: #17a2b8;
+    --hfc-red: #dc3545;
+    --hfc-slate: #6c757d;
+    --hfc-green: #28a745;
+}
+
+body {
+    font-family: 'Titillium Web', sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: 700;
+}
+
+/* Cards */
+.card {
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.hover-effect:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Buttons */
+.btn-hfc-blue {
+    background-color: var(--hfc-blue);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-hfc-blue:hover {
+    background-color: var(--hfc-blue-light);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-hfc-yellow {
+    background-color: var(--hfc-yellow);
+    color: var(--hfc-blue);
+    transition: all 0.3s ease;
+}
+
+.btn-hfc-yellow:hover {
+    background-color: var(--hfc-yellow-dark);
+    color: var(--hfc-blue);
+    transform: translateY(-2px);
+}
+
+/* Badges */
+.badge {
+    font-weight: 500;
+    padding: 5px 10px;
+}
+
+.bg-purple {
+    background-color: var(--hfc-purple);
+}
+
+.bg-brown {
+    background-color: #795548;
+}
+
+.bg-pink {
+    background-color: #e83e8c;
+}
+
+/* Table */
+.table {
+    background-color: white;
+}
+
+.table th {
+    background-color: var(--hfc-blue);
+    color: white;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .navbar-brand span {
+        display: none;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--hfc-blue);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--hfc-blue-light);
+}
+
+/* Navbar error fallback */
+.navbar-container .alert-danger {
+    background-color: #dc3545;
+    color: white;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 0;
+    text-align: center;
+}
+
+/* Active link styling */
+.nav-link.active {
+    font-weight: 600;
+    color: var(--hfc-yellow) !important;
+    border-bottom: 2px solid var(--hfc-yellow);
+}
+
+/* Force logo visibility */
+.navbar-brand img {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Debug borders */
+.debug * {
+    outline: 1px solid red;
+}

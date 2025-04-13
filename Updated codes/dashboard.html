@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | HFC Inventory</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Dynamic Navbar -->
+    <div id="navbarContainer"></div>
+
+    <div class="container py-4">
+        <!-- Welcome Banner -->
+        <div class="card bg-hfc-blue text-white mb-4 border-0 shadow">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h2 class="mb-3">Welcome, <span id="dashboardUserName">Administrator</span></h2>
+                        <p class="mb-0">Last login: <span id="lastLoginDate">Today</span></p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <img src="images/HFC-logo.png" alt="HFC Logo" class="img-fluid" style="max-height: 80px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+            <!-- Quick Stats Cards go here -->
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 border-0 shadow-sm hover-effect">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">TOTAL ITEMS</h6>
+                                <h3 class="mb-0">127</h3>
+                            </div>
+                            <div class="bg-hfc-blue-light rounded-circle p-3">
+                                <i class="bi bi-box-seam text-white fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 border-0 shadow-sm hover-effect">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">LOW STOCK</h6>
+                                <h3 class="mb-0">8</h3>
+                            </div>
+                            <div class="bg-warning rounded-circle p-3">
+                                <i class="bi bi-exclamation-triangle text-white fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 border-0 shadow-sm hover-effect">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">CATEGORIES</h6>
+                                <h3 class="mb-0">12</h3>
+                            </div>
+                            <div class="bg-success rounded-circle p-3">
+                                <i class="bi bi-tags text-white fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="row">
+            <!-- Recent Activity and Quick Actions go here -->
+            <div class="col-md-8 mb-4">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-hfc-blue text-white">
+                        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-plus-circle-fill text-success me-2"></i>
+                                    <span>Added 10 Bibles to inventory</span>
+                                </div>
+                                <small class="text-muted">2 hours ago</small>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-dash-circle-fill text-danger me-2"></i>
+                                    <span>Checked out 2 Microphones</span>
+                                </div>
+                                <small class="text-muted">Yesterday</small>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-pencil-fill text-primary me-2"></i>
+                                    <span>Updated Communion supplies</span>
+                                </div>
+                                <small class="text-muted">3 days ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-hfc-blue text-white">
+                        <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <a href="inventory.html" class="btn btn-hfc-blue w-100 mb-3">
+                            <i class="bi bi-box-seam me-2"></i>Manage Inventory
+                        </a>
+                        <button class="btn btn-outline-hfc-blue w-100 mb-3">
+                            <i class="bi bi-plus-circle me-2"></i>Add New Item
+                        </button>
+                        <button class="btn btn-outline-hfc-blue w-100 mb-3">
+                            <i class="bi bi-people me-2"></i>Manage Users
+                        </button>
+                        <button class="btn btn-outline-hfc-blue w-100">
+                            <i class="bi bi-printer me-2"></i>Generate Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Load navbar
+        fetch('partials/navbar.html')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Navbar file not found");
+                }
+                return response.text();
+            })
+            .then(data => {
+                document.getElementById('navbarContainer').innerHTML = data;
+
+                // Update user info
+                const user = JSON.parse(localStorage.getItem('user')) || { name: 'Administrator', lastLogin: 'Today' };
+
+                document.getElementById('dashboardUserName').textContent = user.name;
+                
+                if (document.getElementById('userName')) {
+                    document.getElementById('userName').textContent = user.name.split(' ')[0];
+                }
+
+                if (user.lastLogin) {
+                    document.getElementById('lastLoginDate').textContent = new Date(user.lastLogin).toLocaleString();
+                }
+            })
+            .catch(error => console.error("Error loading navbar:", error));
+    </script>
+</body>
+</html>
