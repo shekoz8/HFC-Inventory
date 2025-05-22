@@ -1,3 +1,27 @@
+<?php
+session_start();
+
+// Debugging session data
+echo '<pre>';
+print_r($_SESSION);
+echo '</pre>';
+
+
+// Check if user is logged in
+if (!isset($_SESSION['user']) || empty($_SESSION['user']['id'])) {
+    header("Location: /hfc_inventory/Frontend/index.php?error=session_invalid");
+    exit;
+}
+
+// Role-based access check
+$allowed_roles = ['admin', 'clerk'];
+if (!in_array($_SESSION['user']['role'], $allowed_roles)) {
+    header("Location: /hfc_inventory/Frontend/unauthorized.php");
+    exit;
+}
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,10 +37,13 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/auth.css" />
 </head>
 <body>
-    <!-- Dynamic Navbar -->
-    <div id="navbarContainer"></div>
+    <!-- Include Navbar -->
+    <?php
+    include "partials/navbar.php"; 
+    ?>
 
     <div class="container py-4">
         <!-- Page Header -->
@@ -79,7 +106,6 @@
                 </div>
                 <div class="modal-body">
                     <form id="addItemForm">
-                        <!-- You can add your form fields here -->
                         <div class="mb-3">
                             <label for="itemName" class="form-label">Item Name</label>
                             <input type="text" class="form-control" id="itemName" required>
@@ -87,18 +113,17 @@
                         <div class="mb-3">
                             <label for="itemCategory" class="form-label">Category</label>
                             <select id="itemCategory" class="form-select" required>
-                               <option value="">Select category</option>
-                               <option value="Books">Books & Literature</option>
-                               <option value="Electronics">Electronics</option>
-                               <option value="Furniture">Furniture</option>
-                               <option value="Music">Musical Instruments</option>
-                               <option value="Cleaning">Cleaning & Maintenance</option>
-                               <option value="Office">Office Supplies</option>
-                               <option value="Worship">Communion & Worship</option>
-                               <option value="Kitchen">Kitchen & Hospitality</option>
-                               <option value="Events">Event & Decoration</option>
-                               <option value="Transport">Vehicles & Transport</option>
-                                <!-- Add more if needed -->
+                                <option value="">Select category</option>
+                                <option value="Books">Books & Literature</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Furniture">Furniture</option>
+                                <option value="Music">Musical Instruments</option>
+                                <option value="Cleaning">Cleaning & Maintenance</option>
+                                <option value="Office">Office Supplies</option>
+                                <option value="Worship">Communion & Worship</option>
+                                <option value="Kitchen">Kitchen & Hospitality</option>
+                                <option value="Events">Event & Decoration</option>
+                                <option value="Transport">Vehicles & Transport</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -122,7 +147,6 @@
                 </div>
                 <div class="modal-body">
                     <form id="requestForm">
-                        <!-- You can add your request form fields here -->
                         <div class="mb-3">
                             <label for="requestItemName" class="form-label">Item Name</label>
                             <input type="text" class="form-control" id="requestItemName" required>

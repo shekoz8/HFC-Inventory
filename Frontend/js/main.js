@@ -1,68 +1,90 @@
-// Common functions and initialization
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+document.addEventListener('DOMContentLoaded', function () {
+    // Set current year in footer (if exists)
+    const yearSpan = document.getElementById('currentYear');
+    if (yearSpan) {
+        yearSpan.textContent = new Date().getFullYear();
+    }
+
+   // Enforce localStorage auth for frontend-only protection
+const protectedPages = ['dashboard.php', 'inventory.php'];
+if (protectedPages.some(p => window.location.pathname.includes(p))) {
+    // Check localStorage first
+    const user = localStorage.getItem('user');
+    if (!user) {
+       // Only fetch from server if localStorage is empty
+fetch('/hfc_inventory/includes/session.php')
+.then(response => response.json())
+.then(data => {
+    if (!data.isLoggedIn) {
+        console.warn('User not logged in. Redirecting...');
+        window.location.href = '/hfc_inventory/Frontend/index.php';
+    }
+})
+.catch((error) => {
+    console.error('Error checking session:', error);
+    window.location.href = '/hfc_inventory/Frontend/index.php';
+});
+} else {
+console.log('User found in localStorage:', user);
+}
+}
+
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        
+        // Clear localStorage
+        localStorage.removeItem('user');
+        
+        // Make a request to clear the server session
+        fetch('/hfc_inventory/includes/logout.php')
+        .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Logout successful');
+                    window.location.href = '/hfc_inventory/Frontend/index.php'; // Correct redirect path
+                } else {
+                    console.error('Logout failed');
+                }
+            })
+            .catch((error) => {
+                console.error('Error during logout:', error);
+            });
     });
-
-    // Check authentication for protected pages
-    const protectedPages = ['dashboard.html', 'inventory.html'];
-    if (protectedPages.some(page => window.location.pathname.includes(page))) {
-        if (!localStorage.getItem('user')) {
-            window.location.href = 'index.html';
-        }
-    }
-
-    // Set current year in footer
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
-
-    // Logout functionality
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            localStorage.removeItem('user');
-            window.location.href = 'index.html';
-        });
-    }
+}
 });
 
-// Custom HFC theme colors
+// Theme class injection
 const hfcColors = {
     'hfc-blue': '#052460',
     'hfc-yellow': '#FFCF01',
     'hfc-blue-light': '#1a3a7a',
-    'hfc-yellow-dark': '#e6b900',
     'hfc-purple': '#6f42c1',
-    'hfc-aqua': '#17a2b8',
-    'hfc-red': '#dc3545',
-    'hfc-slate': '#6c757d',
     'hfc-green': '#28a745'
 };
 
-// Add custom color classes to document
-Object.entries(hfcColors).forEach(([name, color]) => {
-    const style = document.createElement('style');
-    style.textContent = `
-        .bg-${name} { background-color: ${color} !important; }
-        .text-${name} { color: ${color} !important; }
-        .btn-${name} { 
-            background-color: ${color}; 
+const styleTag = document.createElement('style');
+Object.entries(hfcColors).forEach(([key, color]) => {
+    styleTag.innerHTML += `
+        .bg-${key} { background-color: ${color} !important; }
+        .text-${key} { color: ${color} !important; }
+        .btn-${key} {
+            background-color: ${color};
             border-color: ${color};
-            color: ${name.includes('yellow') ? '#052460' : 'white'};
+            color: ${key.includes('yellow') ? '#052460' : '#fff'};
         }
-        .btn-outline-${name} { 
-            color: ${color}; 
+        .btn-outline-${key} {
+            color: ${color};
             border-color: ${color};
         }
-        .btn-outline-${name}:hover { 
-            background-color: ${color}; 
-            color: ${name.includes('yellow') ? '#052460' : 'white'};
+        .btn-outline-${key}:hover {
+            background-color: ${color};
+            color: ${key.includes('yellow') ? '#052460' : '#fff'};
         }
     `;
-    document.head.appendChild(style);
 });
+document.head.appendChild(styleTag);
 
 // Custom alert function
 function showHFCAlert(message, type = 'success', duration = 3000) {

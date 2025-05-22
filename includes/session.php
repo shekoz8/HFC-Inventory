@@ -1,7 +1,11 @@
 <?php
 session_start();
-if (!isset($_SESSION["username"])) {
-    header("Location: /hfc_inventory/Frontend/index.html");
-    exit();
+header('Content-Type: application/json');
+
+if (isset($_SESSION['user']) && !empty($_SESSION['user']['id'])) {
+    echo json_encode(['isLoggedIn' => true]);
+} else {
+    echo json_encode(['isLoggedIn' => false]);
 }
+exit();
 ?>
