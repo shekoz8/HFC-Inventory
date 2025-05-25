@@ -187,7 +187,7 @@ register_shutdown_function(function() {
             </a>
 
             <!-- Add New Item -->
-            <a href="add_item.php" class="btn btn-outline-hfc-blue w-100 mb-3">
+            <a href="inventory.php" class="btn btn-outline-hfc-blue w-100 mb-3">
                 <i class="bi bi-plus-circle me-2"></i>Add New Item
             </a>
 

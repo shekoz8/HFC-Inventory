@@ -8,6 +8,7 @@ if (!isset($_SESSION['user'])) {
     exit();
 }
 $userName = $_SESSION['user']['name'];
+$userRole = $_SESSION['user']['role'];
 ?>
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #052460;">
     <div class="container">
@@ -30,6 +31,20 @@ $userName = $_SESSION['user']['name'];
                         <i class="bi bi-box-seam"></i> Inventory
                     </a>
                 </li>
+                <?php if ($userRole !== 'admin'): ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="/hfc_inventory/Frontend/my_requests.php">
+                        <i class="bi bi-card-checklist"></i> My Requests
+                    </a>
+                </li>
+                <?php endif; ?>
+                <?php if ($userRole === 'admin'): ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="/hfc_inventory/Frontend/request_management.php">
+                        <i class="bi bi-clipboard-check"></i> Request Management
+                    </a>
+                </li>
+                <?php endif; ?>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item dropdown">
