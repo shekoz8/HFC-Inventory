@@ -3,7 +3,7 @@ session_start();
 
 // Debugging session data
 echo '<pre>';
-print_r($_SESSION);
+// print_r($_SESSION);  \
 echo '</pre>';
 
 

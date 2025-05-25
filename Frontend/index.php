@@ -3,12 +3,14 @@ session_start();
 
 // Redirect if user is already logged in
 if (isset($_SESSION['user'])) {
+    error_log('User already logged in: ' . $_SESSION['user']['email']);
     $role = $_SESSION['user']['role'] ?? 'clerk';
     $redirect = $role === 'admin' ? 'Frontend/dashboard.php' : 'Frontend/inventory.php';
     header("Location: ../$redirect");    
     exit();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 

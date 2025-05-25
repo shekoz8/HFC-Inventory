@@ -1,13 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Check authentication
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!user) {
-        window.location.href = '../index.php';
-        return;
-    }
 
     // Load navbar
-    fetch('../partials/navbar.php')
+    fetch('/hfc_inventory/Frontend/partials/navbar.php')
         .then(response => {
             if (!response.ok) throw new Error('Failed to load navbar');
             return response.text();
@@ -24,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <nav class="navbar navbar-dark bg-primary">
                     <div class="container">
                         <a class="navbar-brand" href="#">
-                            <img src="../images/HFC-logo.png" alt="HFC" height="40">
+                            <img src="/hfc_inventory/Frontend/images/HFC-logo.png" alt="HFC" height="40">
                             HFC Inventory System
                         </a>
                     </div>
@@ -83,7 +77,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const tableBody = document.getElementById('inventoryTable');
         tableBody.innerHTML = '';
 
-        data.forEach(item => {
+        // Sort data by ID in ascending order
+        const sortedData = [...data].sort((a, b) => a.id - b.id);
+
+        sortedData.forEach(item => {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${item.id}</td>
