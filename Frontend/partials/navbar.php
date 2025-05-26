@@ -31,17 +31,26 @@ $userRole = $_SESSION['user']['role'];
                         <i class="bi bi-box-seam"></i> Inventory
                     </a>
                 </li>
-                <?php if ($userRole !== 'admin'): ?>
-                <li class="nav-item">
-                    <a class="nav-link" href="/hfc_inventory/Frontend/my_requests.php">
-                        <i class="bi bi-card-checklist"></i> My Requests
-                    </a>
-                </li>
-                <?php endif; ?>
                 <?php if ($userRole === 'admin'): ?>
                 <li class="nav-item">
                     <a class="nav-link" href="/hfc_inventory/Frontend/request_management.php">
                         <i class="bi bi-clipboard-check"></i> Request Management
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/hfc_inventory/Frontend/manage_users.php">
+                        <i class="bi bi-people"></i> Manage Users
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/hfc_inventory/Frontend/generate_report.php">
+                        <i class="bi bi-printer"></i> Generate Report
+                    </a>
+                </li>
+                <?php else: ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="/hfc_inventory/Frontend/my_requests.php">
+                        <i class="bi bi-card-checklist"></i> My Requests
                     </a>
                 </li>
                 <?php endif; ?>

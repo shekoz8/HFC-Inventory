@@ -46,6 +46,15 @@ if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 
 $_SESSION['LAST_ACTIVITY'] = time();
 
 // Role validation
+require_once '../includes/role_check.php';
+
+// Check if user is logged in
+checkUserRole(['admin', 'clerk']);
+
+// Get user menu items based on role
+$menu_items = getUserMenuItems();
+
+// Role validation
 $roleHierarchy = [
     'admin' => ['admin', 'clerk'],
     'clerk' => ['clerk']
