@@ -221,10 +221,14 @@ try {
     
     // Get requests with details
     $query = "
-        SELECT r.*, i.name as item_name, i.quantity as available_quantity, u.name as requester_name 
+        SELECT r.id, r.item_id, r.user_id, r.quantity, r.reason, r.status, r.requested_at, r.fulfilled_at, r.approved_by,
+               i.name as item_name, i.quantity as available_quantity,
+               u.name as requester_name,
+               ua.name as approver_name
         FROM item_requests r
         JOIN inventory_items i ON r.item_id = i.id
         JOIN users u ON r.user_id = u.id
+        LEFT JOIN users ua ON r.approved_by = ua.id
     ";
     
     if ($statusFilter !== 'all') {
@@ -351,7 +355,7 @@ try {
                                 <?php elseif ($request['status'] === 'Approved'): ?>
                                     <span class="badge bg-success">Approved by <?php echo htmlspecialchars($request['approver_name']); ?></span>
                                 <?php elseif ($request['status'] === 'Rejected'): ?>
-                                    <span class="badge bg-danger">Rejected by <?php echo htmlspecialchars($request['rejecter_name']); ?></span>
+                                    <span class="badge bg-danger">Rejected</span>
                                 <?php endif; ?>
                             </td>
                             <td><?php echo date('M d, Y H:i', strtotime($request['requested_at'])); ?></td>

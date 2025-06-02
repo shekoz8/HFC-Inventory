@@ -193,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_report'])) {
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
-                <img src="images/logo.png" alt="HFC Logo" class="header-logo">
+                <img src="C:/xampp/htdocs/hfc_inventory/Frontend/images/HFC-logo.png" alt="HFC Logo" class="header-logo">
                 <h4 class="mb-0 fw-bold">Generate Inventory Report</h4>
             </div>
         </div>
