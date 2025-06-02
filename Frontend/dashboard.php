@@ -30,6 +30,10 @@ if (!isset($_SESSION['fingerprint'])) {
     exit;
 }
 
+// Check if user is admin
+require_once "../includes/role_check.php";
+checkUserRole('admin', '../Frontend/unauthorized.php');
+
 // Log user access
 if (isset($_SESSION['user']['email'])) {
     error_log('Dashboard access by: ' . $_SESSION['user']['email']);

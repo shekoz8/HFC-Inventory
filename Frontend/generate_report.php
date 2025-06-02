@@ -1,67 +1,99 @@
 <?php
 session_start();
 require_once '../includes/db.php';
+require_once __DIR__ . '/../libraries/tcpdf/inventory_report.php';
 
-// Check if user is logged in
+// Redirect if user not logged in
 if (!isset($_SESSION['user']) || empty($_SESSION['user']['id'])) {
     header("Location: ../Frontend/index.php?error=session_invalid");
     exit;
 }
 
-// Get all inventory items with their current status
-try {
-    $stmt = $conn->prepare("
-        SELECT i.*, c.name as category_name, 
-               CASE 
-                   WHEN i.quantity <= 0 THEN 'Out of Stock'
-                   WHEN i.quantity <= i.min_quantity THEN 'Low Stock'
-                   ELSE 'In Stock'
-               END as status
-        FROM inventory_items i
-        LEFT JOIN categories c ON i.category_id = c.id
-        ORDER BY i.name ASC
-    ");
-    $stmt->execute();
-    $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-} catch (Exception $e) {
-    $error = "Database error: " . $e->getMessage();
+$items = [];
+$report_type = $_POST['report_type'] ?? 'all';
+$category_filter = $_POST['category_filter'] ?? 'all';
+
+// Fetch categories for the dropdown
+$category_sql = "SELECT name FROM categories ORDER BY name ASC";
+$category_result = $conn->query($category_sql);
+$categories = $category_result ? $category_result->fetch_all(MYSQLI_ASSOC) : [];
+
+function buildQuery(&$params, $report_type, $category_filter) {
+    $query = "SELECT i.*, c.name AS category_name,
+                CASE 
+                    WHEN i.quantity <= 0 THEN 'Out of Stock'
+                    WHEN i.quantity <= i.min_quantity THEN 'Low Stock'
+                    ELSE 'In Stock'
+                END AS status
+            FROM inventory_items i
+            LEFT JOIN categories c ON i.category_id = c.id";
+
+    $where_clauses = [];
+
+    if ($report_type === 'low_stock') {
+        $where_clauses[] = "i.quantity <= i.min_quantity";
+    } elseif ($report_type === 'out_of_stock') {
+        $where_clauses[] = "i.quantity <= 0";
+    }
+
+    if ($category_filter !== 'all') {
+        $where_clauses[] = "c.name = ?";
+        $params[] = $category_filter;
+    }
+
+    if (!empty($where_clauses)) {
+        $query .= " WHERE " . implode(" AND ", $where_clauses);
+    }
+
+    $query .= " ORDER BY i.name ASC";
+    return $query;
 }
 
-// Handle report generation
+try {
+    $params = [];
+    $query = buildQuery($params, $report_type, $category_filter);
+    $stmt = $conn->prepare($query);
+    if (!$stmt) throw new Exception("Prepare failed: " . $conn->error);
+    if (!empty($params)) {
+        $stmt->bind_param(str_repeat('s', count($params)), ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $items = $result->fetch_all(MYSQLI_ASSOC);
+} catch (Exception $e) {
+    $_SESSION['error'] = "Error loading data: " . $e->getMessage();
+}
+
+// Generate PDF
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_report'])) {
     try {
-        $filename = "inventory_report_" . date('Y-m-d_H-i-s') . ".pdf";
-        
-        // Create PDF content
-        $html = "<h1>HFC Inventory Report - " . date('F d, Y') . "</h1>
-        <table border='1' cellpadding='5' cellspacing='0' width='100%'>
-            <tr>
-                <th>Item Name</th>
-                <th>Category</th>
-                <th>Quantity</th>
-                <th>Min Quantity</th>
-                <th>Status</th>
-            </tr>";
-        
-        foreach ($items as $item) {
-            $html .= "<tr>
-                <td>{$item['name']}</td>
-                <td>{$item['category_name']}</td>
-                <td>{$item['quantity']}</td>
-                <td>{$item['min_quantity']}</td>
-                <td><strong>{$item['status']}</strong></td>
-            </tr>";
+        $params = [];
+        $query = buildQuery($params, $report_type, $category_filter);
+        $stmt = $conn->prepare($query);
+        if (!$stmt) throw new Exception("Prepare failed: " . $conn->error);
+        if (!empty($params)) {
+            $stmt->bind_param(str_repeat('s', count($params)), ...$params);
         }
-        $html .= "</table>";
-        
-        // Save to file
-        file_put_contents("../reports/{$filename}", $html);
-        
-        // Redirect to download
-        header("Location: ../reports/{$filename}");
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $pdf_items = $result->fetch_all(MYSQLI_ASSOC);
+
+        $pdf = new InventoryReport('P', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->SetCreator('HFC Inventory System');
+        $pdf->SetAuthor('HFC Management');
+        $pdf->SetTitle('HFC Inventory Report');
+        $pdf->SetHeaderData('', 0, '', '');
+        $pdf->SetMargins(15, 30, 15);
+        $pdf->SetAutoPageBreak(TRUE, 25);
+        $pdf->SetFont('helvetica', '', 12);
+        $pdf->AddPage();
+        $pdf->AddTable($pdf_items);
+
+        $filename = "inventory_report_" . date('Y-m-d_H-i-s') . ".pdf";
+        $pdf->Output($filename, 'D');
         exit;
     } catch (Exception $e) {
-        $_SESSION['error'] = "Error generating report: " . $e->getMessage();
+        $_SESSION['error'] = "Report generation failed: " . $e->getMessage();
         header("Location: generate_report.php");
         exit;
     }
@@ -72,98 +104,146 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_report'])) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generate Report | HFC Inventory</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+       .table-scroll {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+}
+
+.table-scroll table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-scroll thead th {
+    position: sticky;
+    top: 0;
+    background-color: var(--hfc-blue); /* or #343a40 */
+    color: #fff;
+    z-index: 2;
+}
+
+    </style>
 </head>
 <body>
-    <?php include "partials/navbar.php"; ?>
+<?php include "partials/navbar.php"; ?>
 
-    <div class="container py-4">
-        <div class="card">
-            <div class="card-header bg-hfc-blue text-blue d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-printer me-2"></i>Generate Inventory Report</h5>
-                <?php if ($_SESSION['user']['role'] === 'admin'): ?>
-                    <a href="inventory.php" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Add Item</a>
-                <?php endif; ?>
+<div class="container py-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-printer me-2 fs-4"></i>
+                <h4 class="mb-0 fw-bold">Generate Inventory Report</h4>
             </div>
-            <div class="card-body">
-                <!-- Success/Error Messages -->
-                <?php if (isset($_SESSION['success'])): ?>
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <?php 
-                            echo $_SESSION['success']; 
-                            unset($_SESSION['success']); 
-                        ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div class="card-body">
+            <!-- Alerts -->
+            <?php foreach (['success', 'error'] as $type): ?>
+                <?php if (isset($_SESSION[$type])): ?>
+                    <div class="alert alert-<?= $type === 'error' ? 'danger' : 'success' ?> alert-dismissible fade show" role="alert">
+                        <?= $_SESSION[$type]; unset($_SESSION[$type]); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
+            <?php endforeach; ?>
 
-                <?php if (isset($_SESSION['error'])): ?>
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <?php 
-                            echo $_SESSION['error']; 
-                            unset($_SESSION['error']); 
-                        ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <!-- Filter Form -->
+            <form method="POST" class="mb-4">
+                <div class="mb-3">
+                    <label class="form-label">Report Type</label>
+                    <select name="report_type" class="form-select">
+                        <option value="all" <?= $report_type === 'all' ? 'selected' : '' ?>>All Items</option>
+                        <option value="low_stock" <?= $report_type === 'low_stock' ? 'selected' : '' ?>>Low Stock Items</option>
+                        <option value="out_of_stock" <?= $report_type === 'out_of_stock' ? 'selected' : '' ?>>Out of Stock Items</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Category Filter</label>
+                    <select name="category_filter" class="form-select">
+                        <option value="all">All Categories</option>
+                        <?php foreach ($categories as $category): ?>
+                            <option value="<?= htmlspecialchars($category['name']) ?>" <?= $category_filter === $category['name'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($category['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="submit" name="generate_report" class="btn btn-primary">
+                    <i class="bi bi-download me-2"></i>Download PDF Report
+                </button>
+            </form>
+
+            <!-- Report Preview -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between bg-light">
+                    <h5 class="mb-0">Report Preview</h5>
+                    <div>
+                        <span class="badge bg-primary">Total: <?= count($items) ?></span>
+                        <span class="badge bg-success">In Stock: <?= count(array_filter($items, fn($i) => $i['status'] === 'In Stock')) ?></span>
+                        <span class="badge bg-warning">Low: <?= count(array_filter($items, fn($i) => $i['status'] === 'Low Stock')) ?></span>
+                        <span class="badge bg-danger">Out: <?= count(array_filter($items, fn($i) => $i['status'] === 'Out of Stock')) ?></span>
                     </div>
-                <?php endif; ?>
-
-                <form method="POST" class="mb-4">
-                    <button type="submit" name="generate_report" class="btn btn-hfc">
-                        <i class="bi bi-printer me-2"></i>Generate Report
-                    </button>
-                </form>
-
-                <h4>Preview Report</h4>
+                </div>
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Item Name</th>
-                                <th>Category</th>
-                                <th>Quantity</th>
-                                <th>Min Quantity</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($items as $item): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($item['name']); ?></td>
-                                <td><?php echo htmlspecialchars($item['category_name']); ?></td>
-                                <td><?php echo $item['quantity']; ?></td>
-                                <td><?php echo $item['min_quantity']; ?></td>
-                                <td>
-                                    <span class="badge bg-<?php 
-                                        echo ($item['status'] === 'Out of Stock') ? 'danger' : 
-                                             (($item['status'] === 'Low Stock') ? 'warning' : 'success');
-                                    ?>"><?php echo $item['status']; ?></span>
-                                </td>
-                                <td>
-                                    <div class="btn-group">
-                                        <a href="edit_item.php?id=<?php echo $item['id']; ?>" class="btn btn-sm btn-warning">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <?php if ($_SESSION['user']['role'] === 'admin'): ?>
-                                            <a href="delete_item.php?id=<?php echo $item['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this item?')">
-                                                <i class="bi bi-trash"></i>
-                                            </a>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                <div class="table-scroll">
+                    <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                                    <th>Item Name</th>
+                                    <th>Category</th>
+                                    <th>Quantity</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($items)): ?>
+                                    <tr>
+                                        <td colspan="0" class="text-center py-4">
+                                            <div class="alert alert-info">
+                                                <i class="bi bi-info-circle me-2"></i>No items found in your inventory
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($items as $item): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($item['name']); ?></td>
+                                        <td><?php echo htmlspecialchars($item['category_name']); ?></td>
+                                        <td><?php echo $item['quantity']; ?></td>
+                                        <td>
+                                            <span class="badge bg-<?php 
+                                                echo ($item['status'] === 'Out of Stock') ? 'danger' : 
+                                                     (($item['status'] === 'Low Stock') ? 'warning' : 'success');
+                                            ?>"><?php echo $item['status']; ?></span>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-0"><strong>Report Type:</strong> <?php echo ucfirst(str_replace('_', ' ', $report_type)); ?></p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <p class="mb-0"><strong>Generated:</strong> <?php echo date('F j, Y H:i'); ?></p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

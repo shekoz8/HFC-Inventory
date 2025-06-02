@@ -37,16 +37,6 @@ $userRole = $_SESSION['user']['role'];
                         <i class="bi bi-clipboard-check"></i> Request Management
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/hfc_inventory/Frontend/manage_users.php">
-                        <i class="bi bi-people"></i> Manage Users
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/hfc_inventory/Frontend/generate_report.php">
-                        <i class="bi bi-printer"></i> Generate Report
-                    </a>
-                </li>
                 <?php else: ?>
                 <li class="nav-item">
                     <a class="nav-link" href="/hfc_inventory/Frontend/my_requests.php">
@@ -61,9 +51,9 @@ $userRole = $_SESSION['user']['role'];
                         <i class="bi bi-person-circle"></i> <?= htmlspecialchars($userName) ?>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Profile</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                        <li><a class="dropdown-item" href="/hfc_inventory/includes/logout.php">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a></li>
                     </ul>
                 </li>
             </ul>

@@ -1,12 +1,17 @@
 <?php
 session_start();
-require_once "../includes/db.php";
+require_once "db.php";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $name = trim($_POST["name"] ?? '');
     $email = trim($_POST["email"] ?? '');
     $password = $_POST["password"] ?? '';
-    $role = $_POST["role"] ?? 'clerk'; // Default to clerk
+    $role = trim($_POST["role"] ?? '');
+    if (empty($role)) {
+        $role = 'clerk';
+    } else if (!in_array($role, ['clerk', 'admin'])) {
+        $role = 'clerk'; // Only allow valid roles
+    }
 
     if (!$name || !$email || !$password) {
         $_SESSION['error'] = "All fields are required.";
@@ -44,16 +49,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             'role' => $role
         ];
 
+        error_log("User registered successfully: ID=" . $stmt->insert_id . ", Name=$name, Role=$role");
+        
         $redirect = ($role === 'admin') ? '../Frontend/dashboard.php' : '../Frontend/inventory.php';
         header("Location: $redirect");
         exit;
     } else {
+        error_log("Registration failed: " . $stmt->error);
         $_SESSION['error'] = "Registration failed. Please try again.";
         header("Location: ../Frontend/partials/registerFE.php");
         exit;
     }
+} else {
+    $_SESSION['error'] = "Invalid request method.";
+    header("Location: ../Frontend/partials/registerFE.php");
+    exit;
 }
-
-$_SESSION['error'] = "Invalid request method.";
-header("Location: ../Frontend/partials/registerFE.php");
-exit;

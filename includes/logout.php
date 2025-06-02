@@ -1,8 +1,7 @@
 <?php
 session_start();
-session_unset();
+// Destroy all session data
 session_destroy();
-
-header("Location: /hfc_inventory/Frontend/index.php");
+// Redirect to login page
+header("Location: ../Frontend/index.php");
 exit();
-?>

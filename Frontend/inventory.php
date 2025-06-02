@@ -92,7 +92,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $category_id = $_POST['itemCategory'];
     $quantity = $_POST['itemQuantity'];
     $min_quantity = isset($_POST['itemMinQuantity']) ? $_POST['itemMinQuantity'] : 5;
-    $location = isset($_POST['itemLocation']) ? $_POST['itemLocation'] : '';
     $description = isset($_POST['itemDescription']) ? $_POST['itemDescription'] : '';
     
     // Determine status based on quantity
@@ -106,12 +105,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     try {
         $stmt = $conn->prepare("
             INSERT INTO inventory_items 
-            (name, category_id, quantity, min_quantity, status, location, description, created_by, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            (name, category_id, quantity, min_quantity, status, description, created_by, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ");
         
         $userId = $_SESSION['user']['id'];
-        $stmt->bind_param("siiisssi", $name, $category_id, $quantity, $min_quantity, $status, $location, $description, $userId);
+        $stmt->bind_param("siiissi", $name, $category_id, $quantity, $min_quantity, $status, $description, $userId);
         $stmt->execute();
         
         if ($stmt->affected_rows > 0) {
@@ -137,7 +136,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $category_id = $_POST['itemCategory'];
     $quantity = $_POST['itemQuantity'];
     $min_quantity = isset($_POST['itemMinQuantity']) ? $_POST['itemMinQuantity'] : 5;
-    $location = isset($_POST['itemLocation']) ? $_POST['itemLocation'] : '';
     $description = isset($_POST['itemDescription']) ? $_POST['itemDescription'] : '';
     
     // Determine status based on quantity
@@ -151,18 +149,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     try {
         $stmt = $conn->prepare("
             UPDATE inventory_items 
-            SET name = ?, category_id = ?, quantity = ?, min_quantity = ?, 
-                status = ?, location = ?, description = ?, updated_at = NOW()
+            SET name = ?, 
+                category_id = ?, 
+                quantity = ?, 
+                min_quantity = ?, 
+                status = ?,
+                description = ?,
+                updated_at = NOW()
             WHERE id = ?
         ");
         
-        $stmt->bind_param("siiisssi", $name, $category_id, $quantity, $min_quantity, $status, $location, $description, $id);
+        $userId = $_SESSION['user']['id'];
+        $stmt->bind_param("siiissi", $name, $category_id, $quantity, $min_quantity, $status, $description, $id);
         $stmt->execute();
         
         if ($stmt->affected_rows > 0) {
             $success = "Item updated successfully!";
             // Log the activity
-            $userId = $_SESSION['user']['id'];
             logActivity($conn, 'update', "Updated item: $name (ID: $id)", $userId);
             
             // Redirect to prevent form resubmission
@@ -377,9 +380,11 @@ function getCategoryColorClass($category) {
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-box-seam"></i> Inventory Management</h2>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
-                <i class="bi bi-plus-lg"></i> Add Item
-            </button>
+            <div class="btn-group">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                    <i class="bi bi-plus-lg"></i> Add Item
+                </button>
+            </div>
         </div>
 
         <!-- Filters -->
@@ -449,10 +454,12 @@ function getCategoryColorClass($category) {
                                        onclick="return confirm('Are you sure you want to delete this item?')">
                                         <i class="bi bi-trash"></i>
                                     </a>
+                                    <?php if ($_SESSION['user']['role'] !== 'admin'): ?>
                                     <button type="button" class="btn btn-success" 
                                             data-bs-toggle="modal" data-bs-target="#requestModal<?php echo $item['id']; ?>">
                                         <i class="bi bi-box-arrow-down"></i>
                                     </button>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
@@ -496,10 +503,7 @@ function getCategoryColorClass($category) {
                             <input type="number" class="form-control" id="itemMinQuantity" name="itemMinQuantity" value="5">
                             <small class="text-muted">When inventory falls below this level, status will change to "Low Stock"</small>
                         </div>
-                        <div class="mb-3">
-                            <label for="itemLocation" class="form-label">Location</label>
-                            <input type="text" class="form-control" id="itemLocation" name="itemLocation">
-                        </div>
+
                         <div class="mb-3">
                             <label for="itemDescription" class="form-label">Description</label>
                             <textarea class="form-control" id="itemDescription" name="itemDescription" rows="3"></textarea>
@@ -550,11 +554,7 @@ function getCategoryColorClass($category) {
                             <input type="number" class="form-control" id="itemMinQuantity<?php echo $item['id']; ?>" 
                                    name="itemMinQuantity" value="<?php echo $item['min_quantity']; ?>">
                         </div>
-                        <div class="mb-3">
-                            <label for="itemLocation<?php echo $item['id']; ?>" class="form-label">Location</label>
-                            <input type="text" class="form-control" id="itemLocation<?php echo $item['id']; ?>" 
-                                   name="itemLocation" value="<?php echo htmlspecialchars($item['location']); ?>">
-                        </div>
+
                         <div class="mb-3">
                             <label for="itemDescription<?php echo $item['id']; ?>" class="form-label">Description</label>
                             <textarea class="form-control" id="itemDescription<?php echo $item['id']; ?>" 
