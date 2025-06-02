@@ -284,8 +284,13 @@ try {
             </a>
 
             <!-- Generate Report -->
-            <a href="generate_report.php" class="btn btn-outline-hfc-blue w-100">
+            <a href="generate_report.php" class="btn btn-outline-hfc-blue w-100 mb-3">
                 <i class="bi bi-printer me-2"></i>Generate Report
+            </a>
+            
+            <!-- Database Setup -->
+            <a href="../database/setup.php" class="btn btn-outline-secondary w-100">
+                <i class="bi bi-database-gear me-2"></i>Database Setup
             </a>
         </div>
     </div>

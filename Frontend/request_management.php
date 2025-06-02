@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../includes/db.php';
+require_once '../includes/item_checkout.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user']) || empty($_SESSION['user']['id'])) {
@@ -109,7 +110,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $transactionType = 'request_approval';
             $notes = "Approved request #{$requestId}";
             $stmt->bind_param("iiiss", $request['item_id'], $userId, $request['quantity'], $transactionType, $notes);
-            $stmt->execute();   
+            $stmt->execute();
+            
+            // Create checkout record for the user to receive the item
+            createCheckout($requestId, $request['user_id'], $request['item_id'], $request['quantity'], "Created from approved request #{$requestId}");
             
             // Commit the transaction
             $conn->commit();

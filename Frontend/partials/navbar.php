@@ -43,6 +43,11 @@ $userRole = $_SESSION['user']['role'];
                         <i class="bi bi-card-checklist"></i> My Requests
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/hfc_inventory/Frontend/my_checkouts.php">
+                        <i class="bi bi-box-arrow-in-right"></i> My Checkouts
+                    </a>
+                </li>
                 <?php endif; ?>
             </ul>
             <ul class="navbar-nav">

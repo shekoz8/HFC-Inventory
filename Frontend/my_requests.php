@@ -132,10 +132,28 @@ try {
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-card-checklist"></i> My Requests</h2>
-            <a href="/hfc_inventory/Frontend/inventory.php" class="btn btn-primary">
-                <i class="bi bi-box-seam"></i> Back to Inventory
-            </a>
+            <div>
+                <a href="/hfc_inventory/Frontend/my_checkouts.php" class="btn btn-info me-2">
+                    <i class="bi bi-box-arrow-in-right"></i> My Checkouts
+                </a>
+                <a href="/hfc_inventory/Frontend/inventory.php" class="btn btn-primary">
+                    <i class="bi bi-box-seam"></i> Back to Inventory
+                </a>
+            </div>
         </div>
+        
+        <!-- Workflow Info Alert -->
+        <?php if (isset($_GET['status']) && $_GET['status'] === 'Approved'): ?>
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <h5><i class="bi bi-info-circle"></i> What's Next?</h5>
+            <p>Your approved requests are ready for pickup. Please go to <a href="/hfc_inventory/Frontend/my_checkouts.php" class="alert-link">My Checkouts</a> to:</p>
+            <ol>
+                <li>Receive your approved items</li>
+                <li>Return items when you're done with them</li>
+            </ol>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <?php endif; ?>
         
         <!-- Status Filter -->
         <div class="mb-4">
@@ -186,6 +204,7 @@ try {
                                     <span class="badge bg-warning text-dark">Pending</span>
                                 <?php elseif ($request['status'] === 'Approved'): ?>
                                     <span class="badge bg-success">Approved</span>
+                                    <a href="/hfc_inventory/Frontend/my_checkouts.php" class="badge bg-info text-decoration-none ms-1">Ready for Pickup</a>
                                 <?php elseif ($request['status'] === 'Rejected'): ?>
                                     <span class="badge bg-danger">Rejected</span>
                                 <?php endif; ?>
@@ -252,12 +271,16 @@ try {
                                 <span class="badge bg-warning text-dark">Pending</span>
                             <?php elseif ($request['status'] === 'Approved'): ?>
                                 <span class="badge bg-success">Approved</span>
+                                <a href="/hfc_inventory/Frontend/my_checkouts.php" class="badge bg-info text-decoration-none ms-1">Ready for Pickup</a>
                             <?php elseif ($request['status'] === 'Rejected'): ?>
                                 <span class="badge bg-danger">Rejected</span>
                             <?php endif; ?>
                         </li>
                         <li class="list-group-item"><strong>Requested On:</strong> <?php echo date('F d, Y h:i A', strtotime($request['requested_at'])); ?></li>
                     </ul>
+                    <?php if ($request['status'] === 'Approved'): ?>
+                        <a href="/hfc_inventory/Frontend/my_checkouts.php" class="btn btn-info">Go to Checkouts</a>
+                    <?php endif; ?>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
