@@ -14,9 +14,8 @@ $error = null;
 
 try {
     $stmt = $conn->prepare("
-        SELECT u.*, r.name as role_name 
+        SELECT u.*, u.role as role_name
         FROM users u
-        LEFT JOIN roles r ON u.role = r.id
         ORDER BY u.name ASC
     ");
     $stmt->execute();
@@ -102,25 +101,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
                     <table class="table table-hover">
                         <thead class="table-dark">
                             <tr>
+                                <th>ID</th>
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Role</th>
+                                <th>Last Login</th>
                                 <th>Created At</th>
+                                <th>Updated At</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($users as $user): ?>
                             <tr>
+                                <td><?php echo htmlspecialchars($user['id']); ?></td>
                                 <td><?php echo htmlspecialchars($user['name']); ?></td>
                                 <td><?php echo htmlspecialchars($user['email']); ?></td>
                                 <td><?php echo htmlspecialchars($user['role_name'] ?: 'N/A'); ?></td>
-                                <td><?php echo date('M d, Y', strtotime($user['created_at'])); ?></td>
+                                <td><?php echo $user['last_login'] ? htmlspecialchars($user['last_login']) : 'NULL'; ?></td>
+                                <td><?php echo date('Y-m-d H:i:s', strtotime($user['created_at'])); ?></td>
+                                <td><?php echo $user['updated_at'] ? date('Y-m-d H:i:s', strtotime($user['updated_at'])) : 'NULL'; ?></td>
                                 <td>
+                                    <a href="edit_user.php?id=<?php echo $user['id']; ?>" class="btn btn-sm btn-primary"><i class="bi bi-pencil-square"></i> Edit</a>
+                                    <a href="copy_user.php?id=<?php echo $user['id']; ?>" class="btn btn-sm btn-secondary"><i class="bi bi-files"></i> Copy</a>
                                     <form method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user?')">
                                         <input type="hidden" name="delete_user" value="<?php echo $user['id']; ?>">
                                         <button type="submit" class="btn btn-sm btn-danger" <?php echo $user['id'] == $_SESSION['user']['id'] ? 'disabled' : ''; ?>>
-                                            <i class="bi bi-trash"></i>
+                                            <i class="bi bi-trash"></i> Delete
                                         </button>
                                     </form>
                                 </td>
