@@ -87,6 +87,47 @@ register_shutdown_function(function() {
     if (ob_get_level()) ob_end_flush();
 });
 
+// Fetch recent activity logs for dashboard
+require_once '../includes/db.php';
+$recentActivities = [];
+try {
+    $stmt = $conn->prepare("SELECT action_type, action_details, created_at FROM activity_logs ORDER BY created_at DESC LIMIT 5");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $recentActivities[] = $row;
+    }
+} catch (Exception $e) {
+    error_log('Failed to fetch activity logs: ' . $e->getMessage());
+}
+
+// Fetch inventory stats for dashboard cards
+$totalItems = 0;
+$lowStock = 0;
+$categoriesCount = 0;
+try {
+    // Total items
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM inventory_items");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $totalItems = $row['total'] ?? 0;
+    // Low stock items
+    $stmt = $conn->prepare("SELECT COUNT(*) as low FROM inventory_items WHERE quantity <= min_quantity");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $lowStock = $row['low'] ?? 0;
+    // Categories count
+    $stmt = $conn->prepare("SELECT COUNT(*) as cat FROM categories");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $categoriesCount = $row['cat'] ?? 0;
+} catch (Exception $e) {
+    error_log('Failed to fetch inventory stats: ' . $e->getMessage());
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -133,7 +174,7 @@ register_shutdown_function(function() {
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <h6 class="text-muted mb-2">TOTAL ITEMS</h6>
-                                <h3 class="mb-0" id="totalItems">127</h3>
+                                <h3 class="mb-0" id="totalItems"><?php echo $totalItems; ?></h3>
                             </div>
                             <div class="bg-hfc-blue-light rounded-circle p-3">
                                 <i class="bi bi-box-seam text-white fs-4"></i>
@@ -148,7 +189,7 @@ register_shutdown_function(function() {
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <h6 class="text-muted mb-2">LOW STOCK</h6>
-                                <h3 class="mb-0" id="lowStock">8</h3>
+                                <h3 class="mb-0" id="lowStock"><?php echo $lowStock; ?></h3>
                             </div>
                             <div class="bg-warning rounded-circle p-3">
                                 <i class="bi bi-exclamation-triangle text-white fs-4"></i>
@@ -163,7 +204,7 @@ register_shutdown_function(function() {
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <h6 class="text-muted mb-2">CATEGORIES</h6>
-                                <h3 class="mb-0" id="categoriesCount">12</h3>
+                                <h3 class="mb-0" id="categoriesCount"><?php echo $categoriesCount; ?></h3>
                             </div>
                             <div class="bg-success rounded-circle p-3">
                                 <i class="bi bi-tags text-white fs-4"></i>
@@ -183,7 +224,40 @@ register_shutdown_function(function() {
                     </div>
                     <div class="card-body">
                         <div class="list-group list-group-flush" id="recentActivityList">
-                            <!-- Dynamic content will be added by JS -->
+                            <?php
+                            function getActivityIcon($type) {
+                                switch ($type) {
+                                    case 'add': return ['bi-plus-circle-fill', 'text-success'];
+                                    case 'update': return ['bi-pencil-fill', 'text-primary'];
+                                    case 'delete': return ['bi-dash-circle-fill', 'text-danger'];
+                                    case 'error': return ['bi-exclamation-triangle-fill', 'text-warning'];
+                                    case 'request': return ['bi-arrow-right-circle-fill', 'text-info'];
+                                    case 'approve_request': return ['bi-check-circle-fill', 'text-success'];
+                                    case 'reject_request': return ['bi-x-circle-fill', 'text-danger'];
+                                    default: return ['bi-info-circle-fill', 'text-secondary'];
+                                }
+                            }
+                            function timeAgo($datetime) {
+                                $timestamp = strtotime($datetime);
+                                $diff = time() - $timestamp;
+                                if ($diff < 60) return 'just now';
+                                if ($diff < 3600) return floor($diff/60) . ' min ago';
+                                if ($diff < 86400) return floor($diff/3600) . ' hours ago';
+                                return date('M d, Y', $timestamp);
+                            }
+                            if (!empty($recentActivities)) {
+                                foreach ($recentActivities as $activity) {
+                                    list($icon, $color) = getActivityIcon($activity['action_type']);
+                                    echo '<div class="list-group-item d-flex justify-content-between align-items-center">';
+                                    echo '<div><i class="bi ' . $icon . ' ' . $color . ' me-2"></i>';
+                                    echo '<span>' . htmlspecialchars($activity['action_details']) . '</span></div>';
+                                    echo '<small class="text-muted">' . timeAgo($activity['created_at']) . '</small>';
+                                    echo '</div>';
+                                }
+                            } else {
+                                echo '<div class="text-muted">No recent activity.</div>';
+                            }
+                            ?>
                         </div>
                     </div>
                 </div>
@@ -219,26 +293,6 @@ register_shutdown_function(function() {
 
 
     <script src="js/main.js"></script>
-    <script>
-        const recentActivityData = [
-            { action: 'Added 10 Bibles to inventory', time: '2 hours ago', icon: 'bi-plus-circle-fill', iconColor: 'text-success' },
-            { action: 'Checked out 2 Microphones', time: 'Yesterday', icon: 'bi-dash-circle-fill', iconColor: 'text-danger' },
-            { action: 'Updated Communion supplies', time: '3 days ago', icon: 'bi-pencil-fill', iconColor: 'text-primary' }
-        ];
-
-        const activityList = document.getElementById('recentActivityList');
-        recentActivityData.forEach(activity => {
-            const activityItem = document.createElement('div');
-            activityItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
-            activityItem.innerHTML = `
-                <div>
-                    <i class="bi ${activity.icon} ${activity.iconColor} me-2"></i>
-                    <span>${activity.action}</span>
-                </div>
-                <small class="text-muted">${activity.time}</small>
-            `;
-            activityList.appendChild(activityItem);
-        });
-    </script>
+    <!-- Removed static JS for recent activity -->
 </body>
 </html>
